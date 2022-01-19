@@ -2,7 +2,13 @@ import * as path from "path";
 import { WsServer } from "tsrpc";
 import { GameRoom } from "./models/GameRoom";
 import { serviceProto } from './shared/protocols/serviceProto';
+declare module 'tsrpc' {
 
+    export interface BaseConnection {
+        uid: number;
+        userName: string,
+    }
+}
 // Create the Server
 export const server = new WsServer(serviceProto, {
     port: 3001,

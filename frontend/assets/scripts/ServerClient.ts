@@ -60,20 +60,10 @@ class ServerClient {
 
 
     async beginNewGame(){
-        let p1:playerData={
-            "uid":1,
-            "userName":"玩家1",
-            "chessType":chessType.white
-        }
-        let p2:playerData={
-            "uid":3,
-            "userName":"玩家3",
-            "chessType":chessType.black
-        }
 
         let res = await this.wslient.callApi("NewGame",{
-            "player1Data":p1,
-            "player2Data":p2
+            "uid":MyData.uid,
+            "userName":MyData.userName
         })
         return res
     }
@@ -81,8 +71,9 @@ class ServerClient {
     async playChess(x,y){
 
         this.wslient.sendMsg("GameData",{
-            "type":actType.nomalMove,
+            "type":actType.chessMove,
             "data":{
+                "actType":actType.chessMove,
                 "uid":MyData.uid,
                 "chessType":MyData.chessType,
                 "chooseX":x,

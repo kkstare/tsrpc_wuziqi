@@ -1,8 +1,8 @@
 import { BaseRequest, BaseResponse, BaseConf } from "./base";
 
 export interface ReqNewGame extends BaseRequest {
-    player1Data:playerData
-    player2Data:playerData 
+    uid:number,
+    userName:string
 }
 
 export interface ResNewGame extends BaseResponse {
@@ -18,7 +18,6 @@ export const conf: BaseConf = {
 export interface playerData{
     uid:number,
     userName:string
-    chessType:chessType
 }
 
 export enum chessType{

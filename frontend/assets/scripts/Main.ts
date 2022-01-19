@@ -6,7 +6,7 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 import { checkPrime } from "crypto";
-import { actType } from "../src/shared/protocols/MsgGameData";
+import { actType, gameState } from "../src/shared/protocols/MsgGameData";
 import { chessType } from "../src/shared/protocols/PtlNewGame";
 import { AI } from "./AI";
 import { MyData } from "./PlayerData";
@@ -29,48 +29,76 @@ export default class Main extends cc.Component {
     @property(cc.Node)
     waitNode:cc.Node = null;
 
+    @property(cc.Label)
+    player1Name:cc.Label
+    @property(cc.Label)
+    player2Name:cc.Label
+
+    @property(cc.Node)
+    tipNode:cc.Node
+
+    @property(cc.Prefab)
+    preTip:cc.Prefab
+
+
     //用于记录棋盘上每个点分别是什么子
     private arrChess = [];
 
     //用于记录落子的顺序，存储坐标对象
     private arrPos = [];
-    
+
+    private gameState = gameState.wait
     private _nextChess: chessType;
     public get nextChess(): chessType {
         return this._nextChess;
     }
     public set nextChess(value: chessType) {
         this._nextChess = value;
-        if(this.nextChess == MyData.chessType){
+        if(MyData.chessType == chessType.look){
+            this.waitNode.active = false        
+        }else if(this.nextChess == MyData.chessType){
             this.waitNode.active = false
         }else{
             this.waitNode.active = true
         }
     }
     async onLoad () {
-        this.initData()
+        this.initListen()
 
-        MyData.uid = 1
-        MyData.userName = "玩家"+Math.floor(Math.random()*100 )
+        let res = this.getQueryVariable()
+        this.initData()
+        if(!res){
+            MyData.uid = Number(res["uid"])
+            MyData.userName = res["userName"]
+        }else{
+            let id = Math.floor(Math.random()*1000)
+            MyData.uid = id
+            MyData.userName = "玩家"+id
+        }
+      
+
+
+        // MyData.uid = 1
+        // MyData.userName = "玩家"+Math.floor(Math.random()*100 )
+
 
 		await ServerClient.connect();
-
         let data = await (await ServerClient.beginNewGame()).res
-        MyData.uid = data.uid,
         MyData.chessType = data.chessType
-        console.error(MyData.chessType)
         this.nextChess = chessType.black
-        this.initListen()
-        console.log("onload ==== ")
 
         cc.game.on("click",(pos)=>{
-            console.log("click")
+            if(this.gameState == gameState.over){
+                this.showTip("游戏已结束")
+                return
+            }
+
             if(MyData.chessType == chessType.look){
-                console.log("观棋不语")
+                this.showTip("观棋不语")
                 return
             }
             if(this.nextChess != MyData.chessType){
-                console.error("现在是对方行动")
+                this.showTip("现在是对方行动")
                 return
             }
 
@@ -83,7 +111,9 @@ export default class Main extends cc.Component {
             if(!cenPos){
                 console.log("点到屏幕外了")
             }else if(this.arrChess[tiledPos.x][tiledPos.y] != 9){
-                console.log("此处有落子")
+                // console.log("此处有落子")
+                this.showTip("此处有落子")
+
             }else{
 
                 ServerClient.playChess(tiledPos.x,tiledPos.y)
@@ -96,23 +126,63 @@ export default class Main extends cc.Component {
          
         })
     }
-
+    getQueryVariable()
+    {
+        let data = []
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i=0;i<vars.length;i++) {
+                var pair = vars[i].split("=");
+                data[pair[0]] = pair[1]
+                
+        }
+        return data
+    }
+        
+          
     initListen(){
         ServerClient.wslient.listenMsg("GameData",(res)=>{
-            // data.type
-            // console.log(data)
-            let type = res.type
-            switch(type){
-                case actType.nomalMove:
-                    this.playToPos( cc.v2(res.data.chooseX,res.data.chooseY ),res.data.chessType)
-                    this.nextChess = res.data.chessType==chessType.black?chessType.white:chessType.black
-        
+            console.error(res.data.actType)
+            if(res.data.actType == actType.chessMove){
+                this.playToPos( cc.v2(res.data.chooseX,res.data.chooseY ),res.data.chessType)
+                this.nextChess = res.data.chessType==chessType.black?chessType.white:chessType.black
+            }else if(res.data.actType == actType.playerAct){
+                console.log(res.data)
+            }else if(res.data.actType == actType.userList){
+                this.player1Name.string = res.data.userList[0]?res.data.userList[0].userName:"虚位以待"
+                this.player2Name.string = res.data.userList[1]?res.data.userList[1].userName:"虚位以待"
+                if(res.data.userList[0]?.uid == MyData.uid){
+                    this.player1Name.node.color = cc.color(0,200,0,255)
+                }
+                if(res.data.userList[1]?.uid == MyData.uid){
+                    this.player2Name.node.color = cc.color(0,200,0,255)
 
-                break
-                case actType.chatMsg:
-                break
-                case actType.newPlayerIn:
-                break
+                }
+            }else if(res.data.actType == actType.chessMap){
+                for(let i = 0 ; i< res.data.chessMap.length;i++){
+                    for(let j = 0 ; j< res.data.chessMap[0].length;j++){
+                        if(res.data.chessMap[i][j] == chessType.black){
+                            this.playToPos( cc.v2(i,j ),chessType.black)
+                        }else if(res.data.chessMap[i][j] == chessType.white){
+                            this.playToPos( cc.v2(i,j ),chessType.white)
+                        }else{
+                            this.arrChess[i][j] = 9
+                        }
+                    }
+                }
+
+                
+            }else if(res.data.actType == actType.gameState ){
+                console.log(res.data)
+                if(res.data.gameState == gameState.over){
+                    this.gameState = gameState.over
+                    this.showTip( (res.data.winer == chessType.black ?"黑子":"白子") + "取得胜利" )
+                }
+
+                
+            }
+            else{
+                console.error("暂未实现")
             }
 
         })
@@ -160,7 +230,6 @@ export default class Main extends cc.Component {
         this.arrChess[tiledPos.x][tiledPos.y] = type
         this.arrPos.push(cc.v2(tiledPos.x,tiledPos.y) )
         
-        console.log( type==1?"白子":"黑子","落子",tiledPos.x,tiledPos.y)
         let newObj
         if( type == chessType.black ){
             newObj = cc.instantiate(this.black)
@@ -179,23 +248,9 @@ export default class Main extends cc.Component {
         newObj.parent = this.bg
 
 
-        this.changeRound()
+        // this.changeRound()
     }
 
-    changeRound(){
-        if(this.arrPos.length%2==1 ){
-
-            console.log("现在是电脑移动")
-            // this.waitNode.active = true
-            this.scheduleOnce(()=>{
-            },1)
-
-
-        }else{
-            // this.waitNode.active = false
-            console.log("现在是玩家移动")
-        }   
-    }
 
     //位置坐标 26->614  宽度 42
     /**
@@ -210,8 +265,6 @@ export default class Main extends cc.Component {
         let x =  Math.round((pos.x-beginPos)/width)  
         let y =  Math.round((pos.y-beginPos)/width) 
 
-        console.log("点击了第",x,"行,第",y,"列")
-
         return new cc.Vec2(x,y)
     }
 
@@ -225,7 +278,6 @@ export default class Main extends cc.Component {
         let width = 42
         let x = beginPos + pos.x*width
         let y = beginPos + pos.y*width
-        console.log("转换为了坐标X：",x,"Y：",y)
 
         let newV3 = new cc.Vec3(x,y,1)
 
@@ -256,6 +308,21 @@ export default class Main extends cc.Component {
         }else{
             return newV3
         }
+    }
+
+    showTip(text:string){
+        let tip = cc.instantiate(this.preTip)
+        tip.parent = this.tipNode
+        tip.getChildByName("label").getComponent(cc.Label).string = text
+        cc.tween(tip)
+        .delay(0.5)
+        .by(2,{y:200,opacity:-255})
+        .call(()=>{
+            tip.destroy()
+        })
+        .start()
+
+
     }
 
 
