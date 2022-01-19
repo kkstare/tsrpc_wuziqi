@@ -2,8 +2,8 @@ import { BaseWsClient } from 'tsrpc-base-client';
 
 import { WsClient as WsClientBrowser } from 'tsrpc-browser';
 import { actType } from '../src/shared/protocols/MsgGameData';
-import { playerData,chessType } from '../src/shared/protocols/PtlNewGame';
 import { serviceProto, ServiceType } from '../src/shared/protocols/serviceProto';
+
 import Config from './Config';
 import { MyData } from './PlayerData';
 
@@ -63,7 +63,8 @@ class ServerClient {
 
         let res = await this.wslient.callApi("NewGame",{
             "uid":MyData.uid,
-            "userName":MyData.userName
+            "userName": MyData.userName,
+            "deskId":MyData.deskId
         })
         return res
     }
@@ -71,14 +72,11 @@ class ServerClient {
     async playChess(x,y){
 
         this.wslient.sendMsg("GameData",{
-            "type":actType.chessMove,
-            "data":{
                 "actType":actType.chessMove,
                 "uid":MyData.uid,
                 "chessType":MyData.chessType,
                 "chooseX":x,
                 "chooseY":y
-            }
         }) 
        
     }

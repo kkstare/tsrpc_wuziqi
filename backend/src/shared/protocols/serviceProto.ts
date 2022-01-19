@@ -15,7 +15,7 @@ export interface ServiceType {
 }
 
 export const serviceProto: ServiceProto<ServiceType> = {
-    "version": 5,
+    "version": 7,
     "services": [
         {
             "id": 2,
@@ -31,56 +31,6 @@ export const serviceProto: ServiceProto<ServiceType> = {
     ],
     "types": {
         "MsgGameData/MsgGameData": {
-            "type": "Interface",
-            "properties": [
-                {
-                    "id": 0,
-                    "name": "type",
-                    "type": {
-                        "type": "Reference",
-                        "target": "MsgGameData/actType"
-                    }
-                },
-                {
-                    "id": 1,
-                    "name": "data",
-                    "type": {
-                        "type": "Reference",
-                        "target": "MsgGameData/actData"
-                    }
-                }
-            ]
-        },
-        "MsgGameData/actType": {
-            "type": "Enum",
-            "members": [
-                {
-                    "id": 0,
-                    "value": 1
-                },
-                {
-                    "id": 1,
-                    "value": 2
-                },
-                {
-                    "id": 2,
-                    "value": 3
-                },
-                {
-                    "id": 3,
-                    "value": 4
-                },
-                {
-                    "id": 4,
-                    "value": 5
-                },
-                {
-                    "id": 5,
-                    "value": 6
-                }
-            ]
-        },
-        "MsgGameData/actData": {
             "type": "Union",
             "members": [
                 {
@@ -116,6 +66,13 @@ export const serviceProto: ServiceProto<ServiceType> = {
                     "type": {
                         "type": "Reference",
                         "target": "MsgGameData/gameData"
+                    }
+                },
+                {
+                    "id": 5,
+                    "type": {
+                        "type": "Reference",
+                        "target": "MsgGameData/tipData"
                     }
                 }
             ]
@@ -267,6 +224,13 @@ export const serviceProto: ServiceProto<ServiceType> = {
                     "type": {
                         "type": "String"
                     }
+                },
+                {
+                    "id": 2,
+                    "name": "onLine",
+                    "type": {
+                        "type": "Boolean"
+                    }
                 }
             ]
         },
@@ -343,6 +307,26 @@ export const serviceProto: ServiceProto<ServiceType> = {
                 }
             ]
         },
+        "MsgGameData/tipData": {
+            "type": "Interface",
+            "properties": [
+                {
+                    "id": 0,
+                    "name": "actType",
+                    "type": {
+                        "type": "Literal",
+                        "literal": 7
+                    }
+                },
+                {
+                    "id": 1,
+                    "name": "msg",
+                    "type": {
+                        "type": "String"
+                    }
+                }
+            ]
+        },
         "PtlNewGame/ReqNewGame": {
             "type": "Interface",
             "extends": [
@@ -367,6 +351,13 @@ export const serviceProto: ServiceProto<ServiceType> = {
                     "name": "userName",
                     "type": {
                         "type": "String"
+                    }
+                },
+                {
+                    "id": 4,
+                    "name": "deskId",
+                    "type": {
+                        "type": "Number"
                     }
                 }
             ]

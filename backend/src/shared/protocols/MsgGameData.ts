@@ -1,3 +1,4 @@
+import { type } from "os";
 import { chessType, playerData } from "./PtlNewGame";
 export enum actType{
     chessMove = 1,
@@ -6,13 +7,9 @@ export enum actType{
     userList=4,
     chessMap = 5,
     gameState = 6,
+    tipMsg = 7,
 }
-export interface MsgGameData {
-    type:actType
-    data:actData
-}
-
-export type actData = chessData|peopleData|userData|mapData|gameData
+export type MsgGameData  = chessData|peopleData|userData|mapData|gameData|tipData
 
 export interface chessData{
     actType:1,
@@ -39,6 +36,11 @@ export interface gameData{
     actType:6
     gameState:gameState
     winer:chessType
+}
+
+export interface tipData{
+    actType: 7
+    msg:string
 }
 
 export enum gameState{

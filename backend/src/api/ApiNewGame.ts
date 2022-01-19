@@ -1,17 +1,16 @@
 import { ApiCall } from "tsrpc";
 import { GameRoom } from "../models/GameRoom";
-import { actData, actType, MsgGameData } from "../shared/protocols/MsgGameData";
+import RoomMgr from "../models/RoomMgr";
+import { actType, MsgGameData } from "../shared/protocols/MsgGameData";
 import { chessType, playerData, ReqNewGame, ResNewGame } from "../shared/protocols/PtlNewGame";
 
 export async function ApiNewGame(call: ApiCall<ReqNewGame, ResNewGame>) {
-    // TODO
-    // call.error('API Not Implemented');
+    call.req.deskId
 
-    // call.succ({
-    //     "code":200
-    // })
+    let room = RoomMgr.ins.getRoomById(call.req.deskId)
+
+    let data = room.addPlayer(call.conn,call.req)
     
-    let data =  GameRoom.ins.addPlayer(call.conn,call.req)
     let type:chessType
     if(data.num == 1){
         type = chessType.black
@@ -20,14 +19,12 @@ export async function ApiNewGame(call: ApiCall<ReqNewGame, ResNewGame>) {
     }else{
         type = chessType.look
     }
-    GameRoom.ins.broadUserData()
+    room.broadUserData()
 
     let chessData:MsgGameData={
-        "type":actType.chessMap,
-        "data":{
-            "actType":actType.chessMap,
-            "chessMap": GameRoom.ins.chessMap
-        }
+        "actType":actType.chessMap,
+        "chessMap": room.chessMap
+        
     }
     call.conn.sendMsg("GameData",chessData)
 

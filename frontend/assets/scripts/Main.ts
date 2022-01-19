@@ -5,7 +5,6 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import { checkPrime } from "crypto";
 import { actType, gameState } from "../src/shared/protocols/MsgGameData";
 import { chessType } from "../src/shared/protocols/PtlNewGame";
 import { AI } from "./AI";
@@ -62,24 +61,26 @@ export default class Main extends cc.Component {
             this.waitNode.active = true
         }
     }
-    async onLoad () {
+
+    async onLoad() {
         this.initListen()
 
         let res = this.getQueryVariable()
         this.initData()
-        if(!res){
+        MyData.deskId = Math.random()<0.5?1:2
+        console.error(res)
+
+        if(res.length!=0){
             MyData.uid = Number(res["uid"])
             MyData.userName = res["userName"]
+            MyData.deskId = res["deskId"]
+
         }else{
             let id = Math.floor(Math.random()*1000)
             MyData.uid = id
             MyData.userName = "玩家"+id
         }
-      
-
-
-        // MyData.uid = 1
-        // MyData.userName = "玩家"+Math.floor(Math.random()*100 )
+        
 
 
 		await ServerClient.connect();
@@ -142,47 +143,51 @@ export default class Main extends cc.Component {
           
     initListen(){
         ServerClient.wslient.listenMsg("GameData",(res)=>{
-            console.error(res.data.actType)
-            if(res.data.actType == actType.chessMove){
-                this.playToPos( cc.v2(res.data.chooseX,res.data.chooseY ),res.data.chessType)
-                this.nextChess = res.data.chessType==chessType.black?chessType.white:chessType.black
-            }else if(res.data.actType == actType.playerAct){
-                console.log(res.data)
-            }else if(res.data.actType == actType.userList){
-                this.player1Name.string = res.data.userList[0]?res.data.userList[0].userName:"虚位以待"
-                this.player2Name.string = res.data.userList[1]?res.data.userList[1].userName:"虚位以待"
-                if(res.data.userList[0]?.uid == MyData.uid){
-                    this.player1Name.node.color = cc.color(0,200,0,255)
-                }
-                if(res.data.userList[1]?.uid == MyData.uid){
-                    this.player2Name.node.color = cc.color(0,200,0,255)
-
-                }
-            }else if(res.data.actType == actType.chessMap){
-                for(let i = 0 ; i< res.data.chessMap.length;i++){
-                    for(let j = 0 ; j< res.data.chessMap[0].length;j++){
-                        if(res.data.chessMap[i][j] == chessType.black){
-                            this.playToPos( cc.v2(i,j ),chessType.black)
-                        }else if(res.data.chessMap[i][j] == chessType.white){
-                            this.playToPos( cc.v2(i,j ),chessType.white)
-                        }else{
-                            this.arrChess[i][j] = 9
+            console.error(res.actType)
+            switch (res.actType) {
+                case actType.chessMove:
+                    this.playToPos( cc.v2(res.chooseX,res.chooseY ),res.chessType)
+                    this.nextChess = res.chessType==chessType.black?chessType.white:chessType.black
+                    break
+                case actType.playerAct:
+                    console.log(res)
+                    break
+                case actType.userList:
+                    this.player1Name.string = res.userList[0]?res.userList[0].userName:"虚位以待"
+                    this.player2Name.string = res.userList[1]?res.userList[1].userName:"虚位以待"
+                    if(res.userList[0]?.uid == MyData.uid){
+                        this.player1Name.node.color = cc.color(0,200,0,255)
+                    }
+                    if(res.userList[1]?.uid == MyData.uid){
+                        this.player2Name.node.color = cc.color(0,200,0,255)
+    
+                    }
+                    break
+                case actType.chessMap:
+                    for(let i = 0 ; i< res.chessMap.length;i++){
+                        for(let j = 0 ; j< res.chessMap[0].length;j++){
+                            if(res.chessMap[i][j] == chessType.black){
+                                this.playToPos( cc.v2(i,j ),chessType.black)
+                            }else if(res.chessMap[i][j] == chessType.white){
+                                this.playToPos( cc.v2(i,j ),chessType.white)
+                            }else{
+                                this.arrChess[i][j] = 9
+                            }
                         }
                     }
-                }
+                    break
+                case actType.gameState:
+                    if(res.gameState == gameState.over){
+                        this.gameState = gameState.over
+                        this.showTip( (res.winer == chessType.black ?"黑子":"白子") + "取得胜利" )
+                    }
+                    break
+                case actType.tipMsg:
+                    this.showTip(res.msg)
+                    break
+                default:
+                    console.error("暂未实现")
 
-                
-            }else if(res.data.actType == actType.gameState ){
-                console.log(res.data)
-                if(res.data.gameState == gameState.over){
-                    this.gameState = gameState.over
-                    this.showTip( (res.data.winer == chessType.black ?"黑子":"白子") + "取得胜利" )
-                }
-
-                
-            }
-            else{
-                console.error("暂未实现")
             }
 
         })
