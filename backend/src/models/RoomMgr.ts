@@ -24,7 +24,7 @@ export default class RoomMgr{
         let room = this.getRoomById(conn.deskId)
         room.offLine(conn)   
 
-        if (room.players.length == 0) {
+        if ((room.players.length == 1 && room.players[0].onLine == false)||(room.players[0].onLine == false && room.players[1].onLine == false) ) {
           this.rooms[conn.deskId] = new GameRoom()
         }
 			return v;

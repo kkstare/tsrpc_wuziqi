@@ -5,7 +5,6 @@ import { actType, MsgGameData } from "../shared/protocols/MsgGameData";
 import { chessType, playerData, ReqNewGame, ResNewGame } from "../shared/protocols/PtlNewGame";
 
 export async function ApiNewGame(call: ApiCall<ReqNewGame, ResNewGame>) {
-    call.req.deskId
 
     let room = RoomMgr.ins.getRoomById(call.req.deskId)
 

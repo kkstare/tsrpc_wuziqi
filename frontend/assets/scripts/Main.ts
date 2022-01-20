@@ -69,11 +69,12 @@ export default class Main extends cc.Component {
         this.initData()
         MyData.deskId = Math.random()<0.5?1:2
         console.error(res)
+        MyData.deskId = 2
 
-        if(res.length!=0){
+        if(res["uid"] && res["userName"]){
             MyData.uid = Number(res["uid"])
             MyData.userName = res["userName"]
-            MyData.deskId = res["deskId"]
+            MyData.deskId =Number( res["deskId"] )
 
         }else{
             let id = Math.floor(Math.random()*1000)
@@ -155,13 +156,23 @@ export default class Main extends cc.Component {
                 case actType.userList:
                     this.player1Name.string = res.userList[0]?res.userList[0].userName:"虚位以待"
                     this.player2Name.string = res.userList[1]?res.userList[1].userName:"虚位以待"
+
+                    if(res.userList[0]?.onLine == false){
+                        this.player1Name.string = res.userList[0].userName+"(离线···)"
+                    }
+                    if(res.userList[1]?.onLine == false){
+                        this.player2Name.string = res.userList[1].userName+"(离线···)"
+                    }
+
+
                     if(res.userList[0]?.uid == MyData.uid){
                         this.player1Name.node.color = cc.color(0,200,0,255)
                     }
                     if(res.userList[1]?.uid == MyData.uid){
                         this.player2Name.node.color = cc.color(0,200,0,255)
-    
                     }
+
+
                     break
                 case actType.chessMap:
                     for(let i = 0 ; i< res.chessMap.length;i++){

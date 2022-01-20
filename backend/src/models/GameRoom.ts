@@ -26,7 +26,14 @@ export class GameRoom{
         // if(this.players.length == 0){
         //     GameRoom.init()
         // }
-        this.players.push(conn)
+        if(this.players[0]?.uid == conn.uid){
+            this.players[0] = conn
+        }else if(this.players[1]?.uid == conn.uid){
+            this.players[1] = conn
+        }else{
+            this.players.push(conn)
+        }
+        
         console.log("this.rooms")
         
         return {uid:Number(conn.uid),num:this.players.length  }
@@ -43,8 +50,6 @@ export class GameRoom{
 
     }
     listenMsg(data: MsgCall<MsgGameData, any>) {
-        
-
         if (data.msg.actType == actType.chessMove) { 
             if (this.players.length < 2) {
                 let tipData: MsgGameData = {
@@ -91,6 +96,7 @@ export class GameRoom{
               if(conn.uid == this.players[index].uid){
                   if (index < 2) {
                       this.players[index].onLine = false
+
                   } else {
                     this.players.splice(index,1)                
                   }
@@ -120,12 +126,9 @@ export class GameRoom{
                     if(curLength >= 5){
                         return curType
                     }
-                      
+                 
                 }
-
-    
-            }
-            
+            }     
         }
 
         return chessType.look
