@@ -87,7 +87,7 @@ export default class Main extends cc.Component {
 		await ServerClient.connect();
         let data = await (await ServerClient.beginNewGame()).res
         MyData.chessType = data.chessType
-        this.nextChess = chessType.black
+        // this.nextChess = chessType.black
 
         cc.game.on("click",(pos)=>{
             if(this.gameState == gameState.over){
