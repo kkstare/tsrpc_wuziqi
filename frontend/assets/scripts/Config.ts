@@ -10,12 +10,12 @@ enum EServerType {
 export const GlobalCf = {
     Version: '1.0.0',
     IsLocalCf: true,
-    ServerType: EServerType.Temp,
+    ServerType: EServerType.Local,
     ServerUrl: [
-        'ws://localhost:3001',
+        'ws://127.0.0.1:3001',
         'wss://api-test.aigamify.cn/aiword',
         'wss://aiword.aigamify.cn',
-        'wss://106.53.94.70:3001'
+        'ws://106.53.94.70:3001'
     ],
 }
 
